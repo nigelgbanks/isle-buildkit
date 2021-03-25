@@ -1,15 +1,7 @@
 # syntax=docker/dockerfile:1.2.1
 ARG repository=local
 ARG tag=latest
-FROM --platform=$BUILDPLATFORM ${repository}/crayfish:${tag} AS crayfish
-
-RUN --mount=type=cache,id=milliner-composer,sharing=locked,target=/root/.composer/cache \
-    composer install -d /var/www/crayfish/Milliner && \
-    ln -s /var/www/crayfish/Milliner/src /var/www/html
-
-FROM ${repository}/nginx:${tag}
-
-EXPOSE 8000
+FROM ${repository}/crayfish:${tag}
 
 ENV \
     MILLINER_DRUPAL_URL=http://drupal:80 \
@@ -17,8 +9,7 @@ ENV \
     MILLINER_FEDORA6=false \
     MILLINER_LOG_LEVEL=debug
 
-COPY --from=crayfish /etc/nginx/http.d/default.conf /etc/nginx/http.d/default.conf
-COPY --from=crayfish --chown=nginx:nginx /var/www /var/www
+RUN ln -s /var/www/crayfish/Milliner/src /var/www/html
 
 COPY rootfs /
 

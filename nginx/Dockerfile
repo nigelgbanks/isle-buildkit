@@ -1,8 +1,19 @@
 # syntax=docker/dockerfile:1.2.1
 ARG repository=local
 ARG tag=latest
+FROM --platform=$BUILDPLATFORM ${repository}/download:${tag} AS download 
+
+# https://getcomposer.org/download/
+RUN --mount=type=cache,id=download-downloads,sharing=locked,target=/opt/downloads \
+    COMPOSER_VERSION="2.0.4" && \
+    COMPOSER_FILE="composer.phar" && \
+    COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/${COMPOSER_FILE}" && \
+    COMPOSER_SHA256="c3b2bc477429c923c69f7f9b137e06b2a93c6a1e192d40ffad1741ee5d54760d" && \
+    download.sh --url "${COMPOSER_URL}" --sha256 "${COMPOSER_SHA256}" "${DOWNLOAD_CACHE_DIRECTORY}" && \
+    cp "${DOWNLOAD_CACHE_DIRECTORY}/${COMPOSER_FILE}" /usr/bin/composer && \
+    chmod a+x /usr/bin/composer
+
 FROM alpine:3.13.2 AS cache
-FROM --platform=$BUILDPLATFORM ${repository}/composer:${tag} AS composer
 FROM ${repository}/base:${tag}
 
 RUN --mount=type=cache,id=nginx-apk,sharing=locked,from=cache,target=/var/cache/apk \
@@ -51,6 +62,6 @@ ENV \
     PHP_POST_MAX_SIZE=128M \
     PHP_UPLOAD_MAX_FILESIZE=128M
 
-COPY --from=composer /usr/bin/composer /usr/bin/composer
+COPY --from=download /usr/bin/composer /usr/bin/composer
 
 COPY rootfs /

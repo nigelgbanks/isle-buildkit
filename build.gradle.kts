@@ -6,7 +6,11 @@ buildscript {
         }
     }
     dependencies {
-        classpath("ca.islandora:isle-gradle-docker-plugin:0.0.4")
+        classpath("ca.islandora:isle-gradle-docker-plugin") {
+            version {
+                branch = "delete-cache-image"
+            }
+        }
     }
 }
 

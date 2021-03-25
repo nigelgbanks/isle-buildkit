@@ -10,6 +10,8 @@
         "*.sh.tmpl": "shellscript",
         "*.sql.tmpl": "sql",
         "*.xml.tmpl": "xml",
+        "*.yaml.tmpl": "yaml",
+        "*.yml.tmpl": "yaml",
         "drush": "shellscript",
         "composer": "shellscript"
     },

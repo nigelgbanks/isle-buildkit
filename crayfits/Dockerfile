@@ -1,17 +1,21 @@
 # syntax=docker/dockerfile:1.2.1
 ARG repository=local
 ARG tag=latest
-FROM --platform=$BUILDPLATFORM ${repository}/composer:${tag} AS composer
-
-ARG COMMIT=6e95f2f325c910b254a2b7bd1cedf25b17874d30
+FROM --platform=$BUILDPLATFORM ${repository}/download:${tag} AS download
 
 RUN --mount=type=cache,id=crayfits-downloads,sharing=locked,target=/opt/downloads \
-    --mount=type=cache,id=crayfish-composer,sharing=locked,target=/root/.composer/cache \
+    COMMIT=6e95f2f325c910b254a2b7bd1cedf25b17874d30 && \
     git-clone-cached.sh \
         --url https://github.com/roblib/CrayFits.git \
         --cache-dir "${DOWNLOAD_CACHE_DIRECTORY}" \
         --commit "${COMMIT}" \
-        --worktree /var/www/crayfits && \
+        --worktree /var/www/crayfits
+
+FROM --platform=$BUILDPLATFORM ${repository}/nginx:${tag} AS composer
+
+COPY --from=download --chown=nginx:nginx /var/www /var/www
+
+RUN --mount=type=cache,id=crayfits-composer,sharing=locked,target=/root/.composer/cache \
     composer install -d /var/www/crayfits
 
 FROM ${repository}/nginx:${tag}

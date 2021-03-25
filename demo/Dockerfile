@@ -1,21 +1,19 @@
 # syntax=docker/dockerfile:1.2.1
 ARG repository=local
 ARG tag=latest
-FROM --platform=$BUILDPLATFORM ${repository}/composer:${tag} AS composer
+FROM --platform=$BUILDPLATFORM ${repository}/nginx:${tag} AS composer
 
-ARG COMMIT=6e9976b156e109cd87c5398afdd9786a16b0773a
-
-# Islandora based Drupal install.
-RUN --mount=type=cache,id=demo-composer,sharing=locked,target=/root/.composer/cache \
-    --mount=type=cache,id=demo-downloads,sharing=locked,target=/opt/downloads \
+# Download Assets
+RUN --mount=type=cache,id=demo-downloads,sharing=locked,target=/opt/downloads \
+    --mount=type=cache,id=demo-composer,sharing=locked,target=/root/.composer/cache \
     # Get the Drupal codebase
+    COMMIT=6e9976b156e109cd87c5398afdd9786a16b0773a && \
     git-clone-cached.sh \
         --url https://github.com/dannylamb/islandora-sandbox.git \
         --cache-dir "${DOWNLOAD_CACHE_DIRECTORY}" \
         --commit "${COMMIT}" \
         --worktree /var/www/drupal && \
-    cd /var/www/drupal && \
-    composer install && \
+    composer install -d /var/www/drupal && \
     # Set up libraries
     mkdir -p /var/www/drupal/web/libraries && \
     # PDF.js
